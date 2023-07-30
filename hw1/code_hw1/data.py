@@ -141,20 +141,24 @@ class DataGenerator(IterableDataset):
                     dim_input=self.dim_input
                 )
                 for character_file in np.random.choice(os.listdir(character_folder),
-                                                       self.num_samples_per_class + 1,
+                                                       self.num_samples_per_class,
                                                        replace=False)
             ])
             for character_folder in character_folders
         ]).transpose(1, 0, 2)
         labels = np.stack([
             np.eye(self.num_classes)
-            for _ in range(self.num_samples_per_class + 1)
+            for _ in range(self.num_samples_per_class)
         ])
 
         shuffled_order = np.arange(self.num_classes)
         np.random.shuffle(shuffled_order)
-        labels[self.num_samples_per_class, :, :] = labels[self.num_samples_per_class, shuffled_order, :]
-        images[self.num_samples_per_class, :, :] = images[self.num_samples_per_class, shuffled_order, :]
+        labels[self.num_samples_per_class - 1, :, :] = labels[self.num_samples_per_class - 1, shuffled_order, :]
+        images[self.num_samples_per_class - 1, :, :] = images[self.num_samples_per_class - 1, shuffled_order, :]
+
+        assert images.shape == (self.num_samples_per_class, self.num_classes, 784)
+        assert labels.shape == (self.num_samples_per_class, self.num_classes, self.num_classes)
+
         return images, labels
         #############################
 
@@ -164,7 +168,7 @@ class DataGenerator(IterableDataset):
 
 
 if __name__ == "__main__":
-    dl = DataGenerator(num_classes=5, num_samples_per_class=3, batch_type='train')
+    dl = DataGenerator(num_classes=5, num_samples_per_class=4, batch_type='train')
     x, y = next(iter(dl))
     print(x.shape, y.shape)
 
