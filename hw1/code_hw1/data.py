@@ -3,7 +3,7 @@ import os
 import random
 import torch
 from torch.utils.data import IterableDataset
-import imageio
+import imageio.v2
 
 
 def get_images(paths, labels, nb_samples=None, shuffle=True):
@@ -101,7 +101,7 @@ class DataGenerator(IterableDataset):
             return self.stored_images[filename]
         image = imageio.v2.imread(filename)  # misc.imread(filename)
         image = image.reshape([dim_input])
-        image = image.astype(np.float32) / 255.0
+        image = image.astype(np.float32)
         image = 1.0 - image
         if self.image_caching:
             self.stored_images[filename] = image
@@ -168,7 +168,7 @@ class DataGenerator(IterableDataset):
 
 
 if __name__ == "__main__":
-    dl = DataGenerator(num_classes=5, num_samples_per_class=4, batch_type='train')
+    dl = DataGenerator(num_classes=2, num_samples_per_class=2, batch_type='train')
     x, y = next(iter(dl))
     print(x.shape, y.shape)
 
@@ -177,6 +177,7 @@ if __name__ == "__main__":
     for i in range(x.shape[0]):
         for j in range(x.shape[1]):
             ax[i, j].imshow(np.reshape(x[i, j], (28, 28)))
+            print(x[i, j])
             ax[i, j].set_title(np.where(y[i, j])[0].item())
             ax[i, j].set_xticks([])
             ax[i, j].set_yticks([])
