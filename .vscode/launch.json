@@ -15,6 +15,18 @@
             "python": "${command:python.interpreterPath}",
             "env": { "PYTHONPATH": "${workspaceFolder}/hw1" },
             "justMyCode": false
+        },
+        {
+            "name": "HW2",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/hw2/code/protonet.py",
+            "args": ["--num_train_iterations", "20000"],
+            "cwd": "${workspaceFolder}/hw2",
+            "console": "integratedTerminal",
+            "python": "${command:python.interpreterPath}",
+            "env": { "PYTHONPATH": "${workspaceFolder}/hw2" },
+            "justMyCode": false
         }
     ]
 }

@@ -6,7 +6,6 @@ import os
 import numpy as np
 import torch
 from torch import nn
-import torch.nn.functional as F
 from torch.utils import tensorboard
 
 import omniglot
@@ -108,6 +107,14 @@ class ProtoNet:
             mean support set accuracy over the batch as a float
             mean query set accuracy over the batch as a float
         """
+
+        def pairwise_norm_distances(x1, x2):
+            x1_norm = torch.norm(x1, p=2, dim=1, keepdim=True)
+            x2_norm = torch.norm(x2, p=2, dim=1, keepdim=True).T
+            x1_x2 = torch.mm(x1, x2.T)
+            distances = x1_norm * x1_norm - 2 * x1_x2 + x2_norm * x2_norm
+            return distances
+
         loss_batch = []
         accuracy_support_batch = []
         accuracy_query_batch = []
@@ -126,7 +133,17 @@ class ProtoNet:
             # Use util.score to compute accuracies.
             # Make sure to populate loss_batch, accuracy_support_batch, and
             # accuracy_query_batch.
-
+            embeddings_support = self._network(images_support)
+            embeddings_query = self._network(images_query)
+            distances_support = pairwise_norm_distances(embeddings_support, embeddings_support)
+            distances_query = pairwise_norm_distances(embeddings_query, embeddings_support)
+            probabilities_support = torch.nn.Softmax(dim=-1)(-distances_support)
+            probabilities_query = torch.nn.Softmax(dim=-1)(-distances_query)
+            loss_query = torch.nn.CrossEntropyLoss()(probabilities_query, labels_query)
+            
+            loss_batch.append(loss_query)
+            accuracy_support_batch.append(util.score(probabilities_support, labels_support))
+            accuracy_query_batch.append(util.score(probabilities_query, labels_query))
             # ********************************************************
             # ******************* YOUR CODE HERE *********************
             # ********************************************************

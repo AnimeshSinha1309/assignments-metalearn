@@ -1,4 +1,7 @@
 venv/
 **/data/
 **/runs/
+**/logs/
+**/omniglot_resized/
+**/omniglot_resized.zip
 **/__pycache__/
