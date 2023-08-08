@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "HW1",
+            "name": "HW1/mann",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/hw1/code_hw1/main.py",
@@ -17,11 +17,23 @@
             "justMyCode": false
         },
         {
-            "name": "HW2",
+            "name": "HW2/protonet",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/hw2/code/protonet.py",
             "args": ["--num_train_iterations", "20000"],
+            "cwd": "${workspaceFolder}/hw2",
+            "console": "integratedTerminal",
+            "python": "${command:python.interpreterPath}",
+            "env": { "PYTHONPATH": "${workspaceFolder}/hw2" },
+            "justMyCode": false
+        },
+        {
+            "name": "HW2/maml",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/hw2/code/maml.py",
+            "args": [],
             "cwd": "${workspaceFolder}/hw2",
             "console": "integratedTerminal",
             "python": "${command:python.interpreterPath}",

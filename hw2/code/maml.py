@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import gc
 
 import numpy as np
 import torch
@@ -179,7 +180,17 @@ class MAML:
         # Make sure to populate accuracies and update parameters.
         # Use F.cross_entropy to compute classification losses.
         # Use util.score to compute accuracies.
+        loss_fn = torch.nn.CrossEntropyLoss()
+        for _ in range(self._num_inner_steps):
+            outputs = self._forward(images, parameters)
+            loss = loss_fn(outputs, labels)
+            accuracies.append(util.score(outputs, labels))
+            gradients = autograd.grad(loss, list(parameters.values()), create_graph=train)
+            for idx, key in enumerate(parameters.keys()):
+                parameters[key] = parameters[key] - gradients[idx]
 
+        outputs = self._forward(images, parameters)
+        accuracies.append(util.score(outputs, labels))
         # ********************************************************
         # ******************* YOUR CODE HERE *********************
         # ********************************************************
@@ -200,6 +211,7 @@ class MAML:
             accuracy_query (float): query set accuracy of the adapted
                 parameters, averaged over the task batch
         """
+        loss_fn = torch.nn.CrossEntropyLoss()
         outer_loss_batch = []
         accuracies_support_batch = []
         accuracy_query_batch = []
@@ -220,7 +232,13 @@ class MAML:
             # Use util.score to compute accuracies.
             # Make sure to populate outer_loss_batch, accuracies_support_batch,
             # and accuracy_query_batch.
+            adapted_params, accuracy_support_list = self._inner_loop(images_support, labels_support, train)
+            outputs_query = self._forward(images_query, adapted_params)
+            loss_query = loss_fn(outputs_query, labels_query)
 
+            outer_loss_batch.append(loss_query)
+            accuracies_support_batch.append(accuracy_support_list)
+            accuracy_query_batch.append(util.score(outputs_query, labels_query))
             # ********************************************************
             # ******************* YOUR CODE HERE *********************
             # ********************************************************
@@ -474,7 +492,7 @@ if __name__ == '__main__':
                         help='number of classes in a task')
     parser.add_argument('--num_support', type=int, default=1,
                         help='number of support examples per class in a task')
-    parser.add_argument('--num_query', type=int, default=15,
+    parser.add_argument('--num_query', type=int, default=10,
                         help='number of query examples per class in a task')
     parser.add_argument('--num_inner_steps', type=int, default=1,
                         help='number of inner-loop updates')
