@@ -3,7 +3,7 @@ import os
 import random
 import torch
 from torch.utils.data import IterableDataset
-import imageio
+import imageio.v2
 
 
 def get_images(paths, labels, nb_samples=None, shuffle=True):
@@ -101,7 +101,7 @@ class DataGenerator(IterableDataset):
             return self.stored_images[filename]
         image = imageio.v2.imread(filename)  # misc.imread(filename)
         image = image.reshape([dim_input])
-        image = image.astype(np.float32) / 255.0
+        image = image.astype(np.float32)
         image = 1.0 - image
         if self.image_caching:
             self.stored_images[filename] = image
@@ -133,9 +133,52 @@ class DataGenerator(IterableDataset):
 
         #############################
         #### YOUR CODE GOES HERE ####
-        pass
+        character_folders = np.random.choice(self.folders, self.num_classes, replace=False)
+        images = np.stack([
+            np.stack([
+                self.image_file_to_array(
+                    os.path.join(character_folder, character_file.decode('utf-8')),
+                    dim_input=self.dim_input
+                )
+                for character_file in np.random.choice(os.listdir(character_folder),
+                                                       self.num_samples_per_class,
+                                                       replace=False)
+            ])
+            for character_folder in character_folders
+        ]).transpose(1, 0, 2)
+        labels = np.stack([
+            np.eye(self.num_classes)
+            for _ in range(self.num_samples_per_class)
+        ])
+
+        shuffled_order = np.arange(self.num_classes)
+        np.random.shuffle(shuffled_order)
+        labels[self.num_samples_per_class - 1, :, :] = labels[self.num_samples_per_class - 1, shuffled_order, :]
+        images[self.num_samples_per_class - 1, :, :] = images[self.num_samples_per_class - 1, shuffled_order, :]
+
+        assert images.shape == (self.num_samples_per_class, self.num_classes, 784)
+        assert labels.shape == (self.num_samples_per_class, self.num_classes, self.num_classes)
+
+        return images, labels
         #############################
 
     def __iter__(self):
         while True:
             yield self._sample()
+
+
+if __name__ == "__main__":
+    dl = DataGenerator(num_classes=2, num_samples_per_class=2, batch_type='train')
+    x, y = next(iter(dl))
+    print(x.shape, y.shape)
+
+    from matplotlib import pyplot as plt
+    fig, ax = plt.subplots(x.shape[0], x.shape[1], figsize=(x.shape[1] * 5, x.shape[0] * 5))
+    for i in range(x.shape[0]):
+        for j in range(x.shape[1]):
+            ax[i, j].imshow(np.reshape(x[i, j], (28, 28)))
+            print(x[i, j])
+            ax[i, j].set_title(np.where(y[i, j])[0].item())
+            ax[i, j].set_xticks([])
+            ax[i, j].set_yticks([])
+    plt.show()

@@ -44,7 +44,20 @@ class MANN(torch.nn.Module):
         """
         #############################
         #### YOUR CODE GOES HERE ####
-        pass
+        hidden_activation = torch.nn.ReLU()
+        final_activation = torch.nn.Softmax(dim=-1)
+
+        input_labels = input_labels.clone()
+        input_labels[:, -1, :, :] = 0
+        input_images = torch.reshape(input_images, (input_images.shape[0], -1, input_images.shape[3]))
+        input_labels = torch.reshape(input_labels, (input_labels.shape[0], -1, input_labels.shape[3]))
+        images_with_labels = torch.cat([input_images, input_labels], dim=-1).float()
+        h1, _ = self.layer1(images_with_labels)
+        h1 = hidden_activation(h1)
+        h2, _ = self.layer2(h1)
+        h2 = final_activation(h2)
+        output = torch.reshape(h2, (h2.shape[0], self.samples_per_class, self.num_classes, self.num_classes))
+        return output
         #############################
 
     def loss_function(self, preds, labels):
@@ -60,7 +73,13 @@ class MANN(torch.nn.Module):
         """
         #############################
         #### YOUR CODE GOES HERE ####
-        pass
+        preds = preds[:, -1, :, :]
+        labels = labels[:, -1, :, :]
+        preds = torch.reshape(preds, (-1, preds.shape[-1]))
+        labels = torch.reshape(labels, (-1, preds.shape[-1]))
+        loss_fn = torch.nn.CrossEntropyLoss()
+        loss = loss_fn(preds, labels)
+        return loss
         #############################
 
 

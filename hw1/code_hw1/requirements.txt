@@ -1,7 +1,8 @@
 googledrivedownloader
-torch==1.12.0
+torch==2.0.1
 torchvision
 numpy
 pytest
 tensorboard
 imageio
+matplotlib
